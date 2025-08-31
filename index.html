@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coordinate Converter</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            max-width: 1200px;
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            align-items: start;
+        }
+
+        .form-section {
+            min-width: 0;
+        }
+
+        .results-section {
+            min-width: 0;
+        }
+
+        .results-section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 24px;
+            font-weight: 300;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 28px;
+            font-weight: 300;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        select, input[type="number"] {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 12px;
+            font-size: 16px;
+            color: #333;
+            background: white;
+            transition: all 0.3s ease;
+            outline: none;
+        }
+
+        select:focus, input[type="number"]:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        input[type="number"]::placeholder {
+            color: #aaa;
+            font-style: italic;
+        }
+
+        .coordinate-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .convert-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 18px;
+            font-size: 18px;
+            font-weight: 600;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .convert-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .convert-btn:active {
+            transform: translateY(0);
+        }
+
+        .result-area {
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            min-height: 60px;
+            color: #666;
+            font-style: italic;
+            display: block;
+        }
+
+        .result-area.show {
+            display: block;
+        }
+
+        .result-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 60px;
+        }
+
+        .map-container {
+            margin-top: 20px;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .map-container iframe {
+            width: 100%;
+            height: 300px;
+            border: none;
+        }
+
+        .tooltip {
+            position: absolute;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+            padding: 20px;
+            z-index: 1000;
+            display: none;
+            pointer-events: none;
+            min-width: 350px;
+        }
+
+        .tooltip.show {
+            display: block;
+        }
+
+        .tooltip h3 {
+            margin: 0 0 15px 0;
+            color: #333;
+            font-size: 16px;
+            font-weight: 600;
+            text-align: center;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .tooltip table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .tooltip th {
+            background: #f8f9fa;
+            color: #555;
+            font-weight: 600;
+            padding: 10px 12px;
+            text-align: center;
+            border: 1px solid #e1e5e9;
+        }
+
+        .tooltip td {
+            padding: 8px 12px;
+            text-align: center;
+            border: 1px solid #e1e5e9;
+            color: #333;
+        }
+
+        .tooltip tr:nth-child(even) td {
+            background: #fafbfc;
+        }
+
+        .tooltip tr:hover td {
+            background: #f0f3ff;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 30px 20px;
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+            
+            .coordinate-group {
+                grid-template-columns: 1fr;
+            }
+
+            .tooltip {
+                min-width: 280px;
+                font-size: 12px;
+            }
+
+            .tooltip th, .tooltip td {
+                padding: 6px 8px;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .container {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="form-section">
+            <h1>Coordinate Converter</h1>
+            
+            <form id="converterForm">
+                <div class="form-group">
+                    <label for="year">Reference Year</label>
+                    <select id="year" name="year" required>
+                        <option value="">Select a year...</option>
+                    </select>
+                </div>
+
+                <!-- Tooltip for poles data -->
+                <div id="polesTooltip" class="tooltip">
+                    <h3>Positions of the Centred Dipole Model Northern Pole</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Year</th>
+                                <th>Latitude (°)</th>
+                                <th>Longitude (°)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="polesTableBody">
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="coordinate-group">
+                    <div class="form-group">
+                        <label for="latitude">Latitude (°)</label>
+                        <input type="number" id="latitude" name="latitude" 
+                               placeholder="e.g., 45.5" step="any" min="-90" max="90" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="longitude">Longitude (°)</label>
+                        <input type="number" id="longitude" name="longitude" 
+                               placeholder="e.g., -122.3" step="any" min="-180" max="180" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="conversion">Conversion Type</label>
+                    <select id="conversion" name="conversion" required>
+                        <option value="">Select conversion type...</option>
+                        <option value="geo2mag" selected="true">Convert geographic to geomagnetic</option>
+                        <option value="mag2geo">Convert geomagnetic to geographic</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="convert-btn">Convert</button>
+            </form>
+        </div>
+
+        <div class="results-section">
+            <h2>Results</h2>
+            <div id="resultArea" class="result-area">
+                <div id="resultContent" class="result-content">
+                    Results will appear here...
+                </div>
+                <div id="mapContainer" class="map-container" style="display: none;">
+                    <iframe id="mapFrame" src="" title="Location Map"></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Source:  https://www.spenvis.oma.be/help/background/coortran/coortran.html
+        const poles = [
+            [1945, 78.47, 291.47],
+            [1950, 78.47, 291.15],
+            [1955, 78.46, 290.84],
+            [1960, 78.51, 290.53],
+            [1965, 78.53, 290.15],
+            [1970, 78.59, 289.82],
+            [1975, 78.69, 289.53],
+            [1980, 78.81, 289.24],
+            [1985, 78.97, 289.10],
+            [1990, 79.13, 288.89],
+            [1995, 79.30, 288.59]
+        ];
+
+        // Populate year dropdown
+        const yearSelect = document.getElementById('year');
+        const polesTableBody = document.getElementById('polesTableBody');
+        const polesTooltip = document.getElementById('polesTooltip');
+
+        poles.forEach(pole => {
+            // Add option to dropdown
+            const option = document.createElement('option');
+            option.value = pole[0];
+            option.textContent = pole[0];
+            if (pole[0] == 1970) option.selected = true;
+            yearSelect.appendChild(option);
+
+            // Add row to tooltip table
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${pole[0]}</td>
+                <td>${pole[1]}</td>
+                <td>${pole[2]}</td>
+            `;
+            polesTableBody.appendChild(row);
+        });
+
+        // Tooltip hover functionality
+        yearSelect.addEventListener('mouseenter', function(e) {
+            polesTooltip.classList.add('show');
+            positionTooltip(e);
+        });
+
+        yearSelect.addEventListener('mouseleave', function() {
+            polesTooltip.classList.remove('show');
+        });
+
+        yearSelect.addEventListener('mousemove', function(e) {
+            if (polesTooltip.classList.contains('show')) {
+                positionTooltip(e);
+            }
+        });
+
+        function positionTooltip(e) {
+            const tooltip = polesTooltip;
+            const rect = yearSelect.getBoundingClientRect();
+            const tooltipRect = tooltip.getBoundingClientRect();
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+
+            let left = rect.left;
+            let top = rect.bottom + 10;
+
+            // Adjust if tooltip would go off right edge
+            if (left + tooltipRect.width > viewportWidth - 20) {
+                left = viewportWidth - tooltipRect.width - 20;
+            }
+
+            // Adjust if tooltip would go off left edge
+            if (left < 20) {
+                left = 20;
+            }
+
+            // Adjust if tooltip would go off bottom edge
+            if (top + tooltipRect.height > viewportHeight - 20) {
+                top = rect.top - tooltipRect.height - 10;
+            }
+
+            tooltip.style.left = left + 'px';
+            tooltip.style.top = top + 'px';
+        }
+
+        // Stub function for geo2mag conversion
+        function geo2mag(year, latitude, longitude, conversionType) {
+            // This is a stub function - you'll implement the actual conversion logic
+            console.log(`Converting coordinates for year ${year}:`);
+            console.log(`Latitude: ${latitude}, Longitude: ${longitude}`);
+            console.log(`Conversion type: ${conversionType}`);
+
+            var incoord = [latitude, longitude];
+
+            const selected = poles.find(row => row[0] === year); 
+            var DlatDeg = selected[1];
+            var DlongDeg = selected[2];
+
+            var converted = conversionType == "geo2mag" ? convertToMag(incoord, DlatDeg, DlongDeg) : convertFromMag(incoord, DlatDeg, DlongDeg);
+
+            return {
+                latitude: converted[0],
+                longitude: converted[1],
+                success: true
+            };
+        }
+
+        // Form submission handler
+        document.getElementById('converterForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const year = parseInt(document.getElementById('year').value);
+            const latitude = parseFloat(document.getElementById('latitude').value);
+            const longitude = parseFloat(document.getElementById('longitude').value);
+            const conversionType = document.getElementById('conversion').value;
+            
+            // Call the conversion function
+            const result = geo2mag(year, latitude, longitude, conversionType);
+            
+            // Display result
+            const resultContent = document.getElementById('resultContent');
+            const mapContainer = document.getElementById('mapContainer');
+            const mapFrame = document.getElementById('mapFrame');
+            
+            if (result.success) {
+                resultContent.innerHTML = `
+                    <div>
+                        <strong>Converted To ${conversionType === 'geo2mag' ? 'Magnetic' : 'Geographic'} Coordinates:</strong><br>
+                        Latitude: ${result.latitude.toFixed(4)}°<br>
+                        Longitude: ${result.longitude.toFixed(4)}°<br><br>
+                    </div>
+                `;
+                
+                // Determine which coordinates to show on map
+                let mapLat, mapLng;
+                if (conversionType === 'geo2mag') {
+                    // Show input coordinates (geographic)
+                    mapLat = latitude;
+                    mapLng = longitude;
+                } else {
+                    // Show output coordinates (converted to geographic)
+                    mapLat = result.latitude;
+                    mapLng = result.longitude;
+                }
+                
+                // Create embedded map URL (using OpenStreetMap)
+                const mapUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${mapLng-0.1},${mapLat-0.1},${mapLng+0.1},${mapLat+0.1}&layer=mapnik&marker=${mapLat},${mapLng}`;
+                
+                mapFrame.src = mapUrl;
+                mapContainer.style.display = 'block';
+                
+            } else {
+                resultContent.innerHTML = '<div style="color: #e74c3c;">Conversion failed. Please check your inputs.</div>';
+                mapContainer.style.display = 'none';
+            }
+            
+            document.getElementById('resultArea').classList.add('show');
+        });
+
+        function convertToMag(incoord, DlatDeg, DlongDeg) {
+            const R = 1.0;           // radius (arbitrary unit)
+
+            const deg2rad = Math.PI / 180;
+            const rad2deg = 180 / Math.PI;
+
+            // convert pole positions to radians
+            const Dlong = DlongDeg * deg2rad;
+            const Dlat = DlatDeg * deg2rad;
+
+            // helper: ensure input is an array of pairs
+            let single = false;
+            let coords;
+            if (!Array.isArray(incoord)) {
+                throw new TypeError("incoord must be [lat, lon] or array of [lat, lon] pairs");
+            }
+            // detect single pair vs array of pairs
+            if (typeof incoord[0] === "number") {
+                // single pair like [lat, lon]
+                single = true;
+                coords = [incoord];
+            } else {
+                // assume array of pairs
+                coords = incoord;
+            }
+
+            // Rotation matrix for longitude: rotate around z by +Dlong
+            // geolong2maglong = [ [cos(Dlong), sin(Dlong), 0],
+            //                     [-sin(Dlong), cos(Dlong), 0],
+            //                     [0, 0, 1] ]
+            const geolong2maglong = [
+                [Math.cos(Dlong), Math.sin(Dlong), 0],
+                [-Math.sin(Dlong), Math.cos(Dlong), 0],
+                [0, 0, 1]
+            ];
+
+            // Rotation matrix for latitude: rotate by (pi/2 - Dlat) in the meridian plane
+            // tomaglat[0,0] = cos(pi/2 - Dlat) = sin(Dlat)
+            // tomaglat[0,2] = -sin(pi/2 - Dlat) = -cos(Dlat)
+            // tomaglat[2,0] = sin(pi/2 - Dlat) = cos(Dlat)
+            // tomaglat[2,2] = cos(pi/2 - Dlat) = sin(Dlat)
+            // tomaglat[1,1] = 1
+            const a = Math.cos(Math.PI / 2 - Dlat); // = sin(Dlat)
+            const b = Math.sin(Math.PI / 2 - Dlat); // = cos(Dlat)
+            // I'll keep the same symbols as IDL for clarity:
+            const tomaglat = [
+                [a, 0, -b],
+                [0, 1, 0],
+                [b, 0, a]
+            ];
+
+            // matrix-vector multiply helper (3x3 * 3x1)
+            function matMulVec(mat, vec) {
+                return [
+                mat[0][0] * vec[0] + mat[0][1] * vec[1] + mat[0][2] * vec[2],
+                mat[1][0] * vec[0] + mat[1][1] * vec[1] + mat[1][2] * vec[2],
+                mat[2][0] * vec[0] + mat[2][1] * vec[1] + mat[2][2] * vec[2]
+                ];
+            }
+
+            // For each input coordinate do conversion
+            const out = coords.map(pair => {
+                const latDeg = pair[0];
+                const lonDeg = pair[1];
+
+                // geographic to radians
+                const glat = latDeg * deg2rad;
+                const glon = lonDeg * deg2rad;
+                const galt = R;
+
+                // rectangular coordinates (geographic)
+                // x = r * cos(lat) * cos(lon)
+                // y = r * cos(lat) * sin(lon)
+                // z = r * sin(lat)
+                const x = galt * Math.cos(glat) * Math.cos(glon);
+                const y = galt * Math.cos(glat) * Math.sin(glon);
+                const z = galt * Math.sin(glat);
+
+                // first rotation: longitude rotation (geolong2maglong)
+                const v1 = matMulVec(geolong2maglong, [x, y, z]);
+
+                // second rotation: tilt into magnetic dipole (tomaglat)
+                const v2 = matMulVec(tomaglat, v1);
+
+                // convert back to latitude, longitude (degrees)
+                // mlat = atan(z, sqrt(x^2 + y^2))
+                const mlatRad = Math.atan2(v2[2], Math.sqrt(v2[0] * v2[0] + v2[1] * v2[1]));
+                const mlonRad = Math.atan2(v2[1], v2[0]);
+
+                let mlatDeg = mlatRad * rad2deg;
+                let mlonDeg = mlonRad * rad2deg;
+
+                // Normalize longitude to [-180, 180)
+                if (mlonDeg >= 180) mlonDeg -= 360;
+                if (mlonDeg < -180) mlonDeg += 360;
+
+                return [mlatDeg, mlonDeg];
+            });
+
+            return single ? out[0] : out;
+        }
+
+        function convertFromMag(incoord, DlatDeg, DlongDeg) {
+            const R = 1.0;           // radius (arbitrary unit)
+
+            const deg2rad = Math.PI / 180;
+            const rad2deg = 180 / Math.PI;
+
+            // convert pole positions to radians
+            const Dlong = DlongDeg * deg2rad;
+            const Dlat = DlatDeg * deg2rad;
+
+            // helper: ensure input is an array of pairs
+            let single = false;
+            let coords;
+            if (!Array.isArray(incoord)) {
+                throw new TypeError("incoord must be [lat, lon] or array of [lat, lon] pairs");
+            }
+            // detect single pair vs array of pairs
+            if (typeof incoord[0] === "number") {
+                // single pair like [lat, lon]
+                single = true;
+                coords = [incoord];
+            } else {
+                // assume array of pairs
+                coords = incoord;
+            }
+
+            // INVERSE rotation matrix for longitude: transpose of original
+            // Original was rotate around z by +Dlong, inverse is rotate by -Dlong
+            const maglong2geolong = [
+                [Math.cos(Dlong), -Math.sin(Dlong), 0],
+                [Math.sin(Dlong), Math.cos(Dlong), 0],
+                [0, 0, 1]
+            ];
+
+            // INVERSE rotation matrix for latitude: transpose of original
+            // Original tomaglat rotated by (pi/2 - Dlat), inverse rotates back
+            const a = Math.cos(Math.PI / 2 - Dlat); // = sin(Dlat)
+            const b = Math.sin(Math.PI / 2 - Dlat); // = cos(Dlat)
+            const frommaglat = [
+                [a, 0, b],
+                [0, 1, 0],
+                [-b, 0, a]
+            ];
+
+            // matrix-vector multiply helper (3x3 * 3x1)
+            function matMulVec(mat, vec) {
+                return [
+                mat[0][0] * vec[0] + mat[0][1] * vec[1] + mat[0][2] * vec[2],
+                mat[1][0] * vec[0] + mat[1][1] * vec[1] + mat[1][2] * vec[2],
+                mat[2][0] * vec[0] + mat[2][1] * vec[1] + mat[2][2] * vec[2]
+                ];
+            }
+
+            // For each input coordinate do conversion
+            const out = coords.map(pair => {
+                const mlatDeg = pair[0];  // magnetic latitude
+                const mlonDeg = pair[1];  // magnetic longitude
+
+                // magnetic coordinates to radians
+                const mlat = mlatDeg * deg2rad;
+                const mlon = mlonDeg * deg2rad;
+                const malt = R;
+
+                // rectangular coordinates (magnetic)
+                // x = r * cos(lat) * cos(lon)
+                // y = r * cos(lat) * sin(lon)
+                // z = r * sin(lat)
+                const x = malt * Math.cos(mlat) * Math.cos(mlon);
+                const y = malt * Math.cos(mlat) * Math.sin(mlon);
+                const z = malt * Math.sin(mlat);
+
+                // first INVERSE rotation: undo magnetic dipole tilt (frommaglat)
+                const v1 = matMulVec(frommaglat, [x, y, z]);
+
+                // second INVERSE rotation: undo longitude rotation (maglong2geolong)
+                const v2 = matMulVec(maglong2geolong, v1);
+
+                // convert back to latitude, longitude (degrees)
+                // glat = atan(z, sqrt(x^2 + y^2))
+                const glatRad = Math.atan2(v2[2], Math.sqrt(v2[0] * v2[0] + v2[1] * v2[1]));
+                const glonRad = Math.atan2(v2[1], v2[0]);
+
+                let glatDeg = glatRad * rad2deg;
+                let glonDeg = glonRad * rad2deg;
+
+                // Normalize longitude to [-180, 180)
+                if (glonDeg >= 180) glonDeg -= 360;
+                if (glonDeg < -180) glonDeg += 360;
+
+                return [glatDeg, glonDeg];
+            });
+
+            return single ? out[0] : out;
+        }        
+    </script>
+</body>
+</html>
